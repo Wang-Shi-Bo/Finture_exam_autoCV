@@ -1,2 +1,1 @@
-# Finture_exam_autoCV
-exam for Finture Teach 
+2026-06-01 init project content
