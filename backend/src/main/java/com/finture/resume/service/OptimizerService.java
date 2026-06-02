@@ -89,7 +89,7 @@ public class OptimizerService {
 
     private String getSystemPrompt(String language) {
         if ("zh".equals(language)) {
-            return "你是一个专业的简历优化顾问。根据用户提供的简历JSON，从内容措辞、职位匹配度、ATS关键词三个维度进行优化。返回严格的JSON格式。";
+            return "你是一个专业的简历优化顾问。根据用户提供的简历JSON，优化所有字段（个人总结、工作经历、项目经历、技能等），从内容措辞、职位匹配度、ATS关键词三个维度进行优化。必须返回完整JSON，保留所有字段不丢失。";
         }
         return "You are a professional resume optimization consultant. Optimize the given resume JSON from three dimensions: wording, job matching, and ATS keywords. Return strict JSON format.";
     }
@@ -105,17 +105,25 @@ public class OptimizerService {
             当前简历JSON：
             %s
 
-            请返回如下JSON格式（不要包含任何其他文字）：
+            请返回如下JSON格式（不要包含任何其他文字，必须包含所有字段）：
             {
               "suggestions": [
                 {
-                  "section": "summary",
+                  "section": "字段名",
                   "original": "原始文本",
                   "suggestion": "优化后文本",
                   "reason": "优化原因"
                 }
               ],
-              "optimizedResume": { /* 优化后的完整简历JSON，结构与输入一致 */ }
+              "optimizedResume": {
+                "personalInfo": {"name": "...", "email": "...", "phone": "..."},
+                "summary": "优化后的个人总结",
+                "workExperience": [{"company": "...", "title": "...", "startDate": "...", "endDate": "...", "highlights": ["优化后的亮点"]}],
+                "projects": [{"name": "...", "description": "...", "techStack": "...", "highlights": ["优化后的亮点"]}],
+                "education": [{"school": "...", "degree": "...", "major": "...", "graduationYear": "..."}],
+                "skills": ["..."],
+                "language": "zh"
+              }
             }
             """, lang, resumeJson);
     }
