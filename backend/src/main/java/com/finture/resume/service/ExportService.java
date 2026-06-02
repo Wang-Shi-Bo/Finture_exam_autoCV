@@ -1,6 +1,7 @@
 package com.finture.resume.service;
 
 import com.finture.resume.model.Education;
+import com.finture.resume.model.Project;
 import com.finture.resume.model.Resume;
 import com.finture.resume.model.WorkExperience;
 import com.lowagie.text.*;
@@ -39,8 +40,7 @@ public class ExportService {
             }
             StringBuilder contact = new StringBuilder();
             if (info.getEmail() != null) contact.append(info.getEmail()).append(" | ");
-            if (info.getPhone() != null) contact.append(info.getPhone()).append(" | ");
-            if (info.getLocation() != null) contact.append(info.getLocation());
+            if (info.getPhone() != null) contact.append(info.getPhone());
             if (contact.length() > 0) {
                 document.add(new Paragraph(contact.toString(), normalFont));
             }
@@ -63,6 +63,27 @@ public class ExportService {
                     " (" + we.getStartDate() + " - " + we.getEndDate() + ")", normalFont));
                 if (we.getHighlights() != null) {
                     for (String h : we.getHighlights()) {
+                        document.add(new Paragraph("  • " + h, normalFont));
+                    }
+                }
+            }
+            document.add(new Paragraph(" "));
+        }
+
+        // 项目经历
+        if (resume.getProjects() != null && !resume.getProjects().isEmpty()) {
+            document.add(new Paragraph("项目经历", sectionFont));
+            for (Project p : resume.getProjects()) {
+                String header = p.getName() != null ? p.getName() : "";
+                if (p.getTechStack() != null && !p.getTechStack().isEmpty()) {
+                    header += "  |  技术栈: " + p.getTechStack();
+                }
+                document.add(new Paragraph(header, normalFont));
+                if (p.getDescription() != null && !p.getDescription().isEmpty()) {
+                    document.add(new Paragraph("  描述: " + p.getDescription(), normalFont));
+                }
+                if (p.getHighlights() != null) {
+                    for (String h : p.getHighlights()) {
                         document.add(new Paragraph("  • " + h, normalFont));
                     }
                 }

@@ -43,6 +43,7 @@ public class ParserService {
             // Ensure non-null collections
             if (resume.getWorkExperience() == null) resume.setWorkExperience(new ArrayList<>());
             if (resume.getEducation() == null) resume.setEducation(new ArrayList<>());
+            if (resume.getProjects() == null) resume.setProjects(new ArrayList<>());
             if (resume.getSkills() == null) resume.setSkills(new ArrayList<>());
             if (resume.getPersonalInfo() == null) resume.setPersonalInfo(new PersonalInfo());
             return resume;
@@ -87,6 +88,7 @@ public class ParserService {
         resume.setSummary(text.trim());
         resume.setWorkExperience(new ArrayList<>());
         resume.setEducation(new ArrayList<>());
+        resume.setProjects(new ArrayList<>());
         resume.setSkills(extractSkills(text));
 
         return resume;

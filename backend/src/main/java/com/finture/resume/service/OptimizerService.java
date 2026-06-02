@@ -128,18 +128,20 @@ public class OptimizerService {
             请从以下简历文本中提取结构化信息，返回严格的JSON格式（不要包含任何其他文字）。
 
             提取要求：
-            - personalInfo: 姓名(name)、邮箱(email)、电话(phone)、地点(location)
+            - personalInfo: 姓名(name)、邮箱(email)、电话(phone)
             - summary: 一句话个人总结（从原文提炼，不要照搬全文）
             - workExperience: 工作经历数组，每条包含公司(company)、职位(title)、开始日期(startDate)、结束日期(endDate)、亮点(highlights数组)
+            - projects: 项目经历数组，每条包含项目名称(name)、项目描述(description)、技术栈(techStack)、亮点(highlights数组)
             - education: 教育经历数组，每条包含学校(school)、学位(degree)、专业(major)、毕业年份(graduationYear)
             - skills: 技能数组
             - language: "zh" 或 "en"
 
             JSON格式示例：
             {
-              "personalInfo": {"name": "姓名", "email": "xxx@xxx.com", "phone": "138xxxx", "location": "城市"},
+              "personalInfo": {"name": "姓名", "email": "xxx@xxx.com", "phone": "138xxxx"},
               "summary": "简短的个人总结",
               "workExperience": [{"company": "公司名", "title": "职位", "startDate": "2020-01", "endDate": "2022-06", "highlights": ["亮点1", "亮点2"]}],
+              "projects": [{"name": "项目名", "description": "描述", "techStack": "Spring Boot, MySQL", "highlights": ["亮点1", "亮点2"]}],
               "education": [{"school": "大学名", "degree": "本科", "major": "专业名", "graduationYear": "2018"}],
               "skills": ["Java", "Spring Boot"],
               "language": "zh"
