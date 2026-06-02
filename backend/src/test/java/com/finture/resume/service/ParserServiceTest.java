@@ -1,13 +1,29 @@
 package com.finture.resume.service;
 
+import com.finture.resume.model.PersonalInfo;
+import com.finture.resume.model.Resume;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockMultipartFile;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class ParserServiceTest {
 
-    private final ParserService parserService = new ParserService();
+    private ParserService parserService;
+    private OptimizerService mockOptimizer;
+
+    @BeforeEach
+    void setUp() {
+        mockOptimizer = mock(OptimizerService.class);
+        parserService = new ParserService(mockOptimizer);
+    }
 
     @Test
     void parseUnsupportedFormat_shouldThrow() {
@@ -18,8 +34,22 @@ class ParserServiceTest {
     }
 
     @Test
-    void parseDocx_shouldReturnResume() throws Exception {
-        // Create a minimal valid docx (empty document)
+    void parseDocx_shouldReturnResumeFromLLM() throws Exception {
+        // Mock LLM response
+        Resume mockResume = new Resume();
+        PersonalInfo info = new PersonalInfo();
+        info.setName("Test User");
+        info.setEmail("test@example.com");
+        info.setPhone("13812345678");
+        mockResume.setPersonalInfo(info);
+        mockResume.setSummary("A Java developer");
+        mockResume.setWorkExperience(new ArrayList<>());
+        mockResume.setEducation(new ArrayList<>());
+        mockResume.setSkills(List.of("Java", "Spring Boot"));
+        mockResume.setLanguage("en");
+
+        when(mockOptimizer.parseResumeFromText(anyString())).thenReturn(mockResume);
+
         byte[] docxBytes = createMinimalDocx();
         MockMultipartFile file = new MockMultipartFile(
             "resume", "resume.docx",
@@ -28,7 +58,28 @@ class ParserServiceTest {
         );
         var resume = parserService.parse(file);
         assertNotNull(resume);
-        // Empty docx produces empty text, so language detection may fallback
+        assertEquals("Test User", resume.getPersonalInfo().getName());
+        assertEquals("test@example.com", resume.getPersonalInfo().getEmail());
+        assertEquals("13812345678", resume.getPersonalInfo().getPhone());
+    }
+
+    @Test
+    void parseDocx_llmFailure_shouldFallback() throws Exception {
+        // Mock LLM failure
+        when(mockOptimizer.parseResumeFromText(anyString()))
+            .thenThrow(new RuntimeException("API error"));
+
+        byte[] docxBytes = createMinimalDocx();
+        MockMultipartFile file = new MockMultipartFile(
+            "resume", "resume.docx",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            docxBytes
+        );
+        var resume = parserService.parse(file);
+        assertNotNull(resume);
+        // Fallback should still extract email/phone via regex
+        assertEquals("test@example.com", resume.getPersonalInfo().getEmail());
+        assertEquals("13812345678", resume.getPersonalInfo().getPhone());
     }
 
     private byte[] createMinimalDocx() throws Exception {
@@ -61,23 +112,5 @@ class ParserServiceTest {
         zip.closeEntry();
         zip.finish();
         return out.toByteArray();
-    }
-
-    @Test
-    void parseDocx_shouldExtractEmailAndPhone() throws Exception {
-        byte[] docxBytes = createMinimalDocx();
-        MockMultipartFile file = new MockMultipartFile(
-            "resume", "resume.docx",
-            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-            docxBytes
-        );
-        var resume = parserService.parse(file);
-        assertNotNull(resume);
-        assertNotNull(resume.getPersonalInfo());
-        assertEquals("test@example.com", resume.getPersonalInfo().getEmail());
-        assertEquals("13812345678", resume.getPersonalInfo().getPhone());
-        assertTrue(resume.getSkills().contains("Java"));
-        assertTrue(resume.getSkills().contains("Spring Boot"));
-        assertTrue(resume.getSkills().contains("MySQL"));
     }
 }

@@ -120,6 +120,72 @@ public class OptimizerService {
             """, lang, resumeJson);
     }
 
+    /**
+     * 使用 LLM 将原始简历文本解析为结构化的 Resume 对象
+     */
+    public Resume parseResumeFromText(String rawText) {
+        String prompt = String.format("""
+            请从以下简历文本中提取结构化信息，返回严格的JSON格式（不要包含任何其他文字）。
+
+            提取要求：
+            - personalInfo: 姓名(name)、邮箱(email)、电话(phone)、地点(location)
+            - summary: 一句话个人总结（从原文提炼，不要照搬全文）
+            - workExperience: 工作经历数组，每条包含公司(company)、职位(title)、开始日期(startDate)、结束日期(endDate)、亮点(highlights数组)
+            - education: 教育经历数组，每条包含学校(school)、学位(degree)、专业(major)、毕业年份(graduationYear)
+            - skills: 技能数组
+            - language: "zh" 或 "en"
+
+            JSON格式示例：
+            {
+              "personalInfo": {"name": "姓名", "email": "xxx@xxx.com", "phone": "138xxxx", "location": "城市"},
+              "summary": "简短的个人总结",
+              "workExperience": [{"company": "公司名", "title": "职位", "startDate": "2020-01", "endDate": "2022-06", "highlights": ["亮点1", "亮点2"]}],
+              "education": [{"school": "大学名", "degree": "本科", "major": "专业名", "graduationYear": "2018"}],
+              "skills": ["Java", "Spring Boot"],
+              "language": "zh"
+            }
+
+            简历原文：
+            %s
+            """, rawText);
+
+        Map<String, Object> requestBody = Map.of(
+            "model", model,
+            "messages", List.of(
+                Map.of("role", "system", "content", "你是一个专业的简历解析器。从简历文本中提取结构化信息，只返回JSON，不要加任何解释。"),
+                Map.of("role", "user", "content", prompt)
+            ),
+            "temperature", 0.3
+        );
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(apiKey);
+
+        HttpEntity<Map<String, Object>> request = new HttpEntity<>(requestBody, headers);
+
+        try {
+            ResponseEntity<Map> response = restTemplate.exchange(
+                apiUrl, HttpMethod.POST, request, Map.class
+            );
+
+            Map body = response.getBody();
+            List<Map> choices = (List<Map>) body.get("choices");
+            Map message = (Map) choices.get(0).get("message");
+            String content = (String) message.get("content");
+
+            // Extract JSON from response
+            String jsonStr = content.trim();
+            if (jsonStr.startsWith("```")) {
+                jsonStr = jsonStr.replaceAll("^```(?:json)?\\s*", "");
+                jsonStr = jsonStr.replaceAll("\\s*```$", "");
+            }
+            return objectMapper.readValue(jsonStr, Resume.class);
+        } catch (Exception e) {
+            throw new RuntimeException("LLM 简历解析失败: " + e.getMessage());
+        }
+    }
+
     private OptimizeResponse parseOptimizeResponse(String content) {
         try {
             String jsonStr = content.trim();
