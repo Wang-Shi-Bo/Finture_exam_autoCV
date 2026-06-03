@@ -1,35 +1,9 @@
 <script setup>
-import { ref } from 'vue'
-
 const props = defineProps({
   fileId: String,
   suggestions: Array,
   optimizedResume: Object
 })
-
-const emit = defineEmits(['export'])
-
-const exporting = ref(false)
-
-async function handleExport() {
-  exporting.value = true
-  try {
-    const { exportPdf } = await import('../api/resume.js')
-    const res = await exportPdf({
-      fileId: props.fileId,
-      resume: props.optimizedResume,
-      suggestions: props.suggestions
-    })
-    const url = window.URL.createObjectURL(new Blob([res.data]))
-    const a = document.createElement('a')
-    a.href = url
-    a.download = 'optimized-resume.docx'
-    a.click()
-    window.URL.revokeObjectURL(url)
-  } finally {
-    exporting.value = false
-  }
-}
 </script>
 
 <template>
@@ -67,14 +41,6 @@ async function handleExport() {
     </section>
 
     <p class="note">基础信息、工作经历、教育背景均保持原样不变</p>
-
-    <button
-      class="btn-export"
-      :disabled="exporting"
-      @click="handleExport"
-    >
-      {{ exporting ? '生成中...' : '导出优化后 Word' }}
-    </button>
   </div>
 </template>
 
@@ -88,12 +54,12 @@ section { background: #fff; border-radius: 8px; padding: 16px; margin-bottom: 16
 .s-header { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
 .badge { background: #e8f0fe; color: #4a90d9; padding: 2px 8px; border-radius: 4px; font-size: 12px; }
 .reason { color: #888; font-size: 13px; }
-.s-body { display: flex; gap: 12px; align-items: flex-start; }
-.s-original, .s-new { flex: 1; }
-.s-arrow { font-size: 18px; color: #4a90d9; padding-top: 16px; }
+.s-body { display: flex; gap: 12px; align-items: flex-start; overflow: hidden; }
+.s-original, .s-new { flex: 1; min-width: 0; }
+.s-arrow { font-size: 18px; color: #4a90d9; padding-top: 16px; flex-shrink: 0; }
 .label { font-size: 11px; color: #999; text-transform: uppercase; }
-.s-original p { color: #c62828; font-size: 14px; }
-.s-new p { color: #2e7d32; font-size: 14px; }
+.s-original p { color: #c62828; font-size: 14px; word-break: break-word; overflow-wrap: break-word; }
+.s-new p { color: #2e7d32; font-size: 14px; word-break: break-word; overflow-wrap: break-word; }
 .skill-tags { display: flex; flex-wrap: wrap; gap: 8px; }
 .skill-tag {
   background: linear-gradient(135deg, #e8f0fe, #d4e4fc);
@@ -102,8 +68,8 @@ section { background: #fff; border-radius: 8px; padding: 16px; margin-bottom: 16
   border-radius: 20px;
   font-size: 14px;
   font-weight: 500;
+  max-width: 100%;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
-.btn-export { width: 100%; padding: 14px; background: #2e7d32; color: #fff; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; }
-.btn-export:hover { background: #1b5e20; }
-.btn-export:disabled { opacity: 0.6; cursor: not-allowed; }
 </style>

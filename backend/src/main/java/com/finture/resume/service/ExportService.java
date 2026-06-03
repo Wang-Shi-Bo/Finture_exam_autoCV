@@ -141,11 +141,28 @@ public class ExportService {
                 XWPFParagraph xwpfPara = xwpf.createParagraph();
                 XWPFRun run = xwpfPara.createRun();
                 run.setText(hwpfPara.text());
+                // setFontFamily sets ASCII/HAnsi; must also set EastAsia for Chinese text
+                run.setFontFamily("宋体");
+                setEastAsianFont(run, "宋体");
             }
 
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             xwpf.write(out);
             return out.toByteArray();
         }
+    }
+
+    /**
+     * Set East Asian font on a run — essential for Chinese text to render in Word.
+     * setFontFamily() only sets ASCII/HAnsi/CS, not EastAsia.
+     */
+    private void setEastAsianFont(XWPFRun run, String fontFamily) {
+        try {
+            var rPr = run.getCTR().isSetRPr() ? run.getCTR().getRPr() : run.getCTR().addNewRPr();
+            var rFonts = rPr.sizeOfRFontsArray() > 0 ? rPr.getRFontsArray(0) : rPr.addNewRFonts();
+            if (rFonts.getEastAsia() == null || rFonts.getEastAsia().isEmpty()) {
+                rFonts.setEastAsia(fontFamily);
+            }
+        } catch (Exception ignored) {}
     }
 }

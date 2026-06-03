@@ -9,22 +9,61 @@
 1. 使用 superpowers ，向CC 简单说明我要创建的项目，CC使用brainstorming 向我询问具体需求，之后生成Plan一步步执行（创建了git commit hook，每个task完成后git commit），
 2. 初版本生成运行，没有达到预期效果，存在问题，首先页面结构和需求不一样，缺少关键字段，并且部分内容没有解析出来，并且解析文件没有使用LLM去做，而是使用正则方法做的，这也是错误的原因，
 后续提示CC去用LLM解析简历内容；修改后简历内容可以完整解析，但是部分字段还是没有正确映射到页面；
-3. 重新要求CC（❯ 限制上传的文件为.doc 等文本文件，不适用PDF，但导出的是PDF格式，文件内容，是基础，公司经历，和专业技能，仅仅优化专业技能达到高级开发水平。文件样式不要改变）
-CC+SP重新问了关键需求点开始新的Plan去完成；
-4. 完成后用 .doc文件测试报错（The supplied data appears to be in the OLE2 Format. You are calling the part of POI that deals with OOXML (Office Open XML) Documents. You need to call a different part of POI to process this data (eg HSSF instead of XSSF)，原因是.doc（旧版 Word OLE2 格式）和 .docx（新版 OOXML）需要不同的解析器。XWPFDocument 只处理 .docx，.doc 需要用 HWPFDocument。需要添加 poi-scratchpad 依赖（含 HWPFDocument 用于 .doc），然后修改 ParserService。
 
+
+- 2026-06-03 项目优化
+1. 重新要求CC（❯ 限制上传的文件为.doc 等文本文件，不适用PDF，但导出的是PDF格式，文件内容，是基础，公司经历，和专业技能，仅仅优化专业技能达到高级开发水平。文件样式不要改变）
+CC+SP重新问了关键需求点开始新的Plan去完成；
+2. 完成后用 .doc文件测试报错（The supplied data appears to be in the OLE2 Format. You are calling the part of POI that deals with OOXML (Office Open XML) Documents. You need to call a different part of POI to process this data (eg HSSF instead of XSSF)，原因是.doc（旧版 Word OLE2 格式）和 .docx（新版 OOXML）需要不同的解析器。XWPFDocument 只处理 .docx，.doc 需要用 HWPFDocument。需要添加 poi-scratchpad 依赖（含 HWPFDocument 用于 .doc），然后修改 ParserService。
+3. 可以上传文件，但是缺失姓名字段，专业技能没有分条展示；继续优化需求，添加缺失字段，专业技能分条展示； 
+5. LLM 偶尔会调用失败，
+6. 移除导出功能，仅仅展示优化后的简历内容，方便自己按需增加
+7. 整理了相关.claude 文件夹，统一文件位置，规范高效管理
+8. 项目完成，将项目push到github。
 
 
 ## 对Claude Code的认识变化
-
+- 最初使用Claude 没有用到superpowers，或者是一些自己定义的skills，仅仅是对话交流让它辅助我做开发，我自己还是会看它的代码，必要的时候会插手修改，但是多次对话后，开始出现信息丢失的情况，
+例如之前提到的问题，后面又出现了，并且项目越修改，越糟糕，会删除之前的完成的代码，甚至把项目结构破坏，导致review 非常困难。
+- 后来学会使用分小任务执行，执行步骤落地，以及自测，这个时候情况好很多了，但是偶尔还是会出现乱改代码问题，看来还是需要更规范更工程化去约束它
+- 现在使用superpowers和harness后，感觉Claude code确实 “稳”了很多，因为每次执行前进行brainstorming，和plan，一步步确认执行计划，会让我心里有谱，知道它会做哪些事情，真的强大了不少
+- 目前对Claude code觉得它是一匹野马，想要驾驭它，要全面的，细致的了解他（开发文档得好好看），要善于使用一些优秀的插件（superpowers），之后软件开发，真正的古法编程占用很少了（我认为必要的时候还是要手动去介入的），
+更多的是怎么学会更好的驾驭这个野马吧。
+- 还有要学习下LLM，不然Claude code 真的像黑盒一样，这种未知感和失去掌控感觉不是很好；
 
 ## "原来还能这样"的事
-
+- 配置好SSH后能够自动push代码到github仓库，并且自动生成commit message，很不错 
+- 不用自己研究 hook 语法，告诉它"提交前跑测试"，它直接帮你生成并配置好 hook 文件 
+- superpower它能主动用 todo list 管理复杂任务 你给它一个大需求，它会自己拆解成小任务列表，逐个执行并标记进度，不用你手动追踪，之前都是自己拆分任务，这个很不错；
 
 ## "这玩意还不行"的事
+- 项目的完成时间超出我的预期，我预期大概2个小时可以完成这个小项目，但是实际时间大概5小时，我认为一个可能是模型的问题吧，另一个是使用superpowers做这种小项目有点沉重
+- 很多问题反复出现，例如姓名字段丢失，样式问题依旧存在，但是这个是LLM进行解析的，应该是模型解析不稳定造成的；但是CC自我测试的时候没有发现这个问题 ；
+- 样式丢失问题尝试多次依旧无法解决，cc给出原因和方案，但执行后问题还是存在；这个问题继续解决中
 
 
 ## 优化计划
+- 项目部分的优化
+1. 添加项目经历部分，使简历优化内容更丰富
+2. 添加自动导出PDF功能，减少手动操作
+3. 新增优化级别，例如初级开发，中级开发，高级开发，专家开发，等不同级别的内容描述；
 
+- 使用Claude Code 优化
+1. 给Claude Code 做好需求和方案的描述，将需求和方案详细化，在执行之前问它方案的可行性和复杂度，是否有更好的替代方案
+2. 生成文档的规范管理，例如统一放入.claude 或者自定义的docs文件夹下，方便查看管理
+3. 在开发项目前规划需要用到哪些hooks和skills，让CC去提前创建
 
 ## 「换个角色」思考（200~500 字）：让一个完全没碰过 CC 的同事（产品候选人 → 假设技术同事；技术候选人 → 假设产品/运营同事）开始用 CC做本职工作，你会给他配什么 skill / agent / hook？为什么？
+- 如果是产品经理同事
+他最关心的地方是对产品的了解、怎么提出可执行落地的需求、以及结果的验证，不是写代码。
+我会给他配skills：
+product-status skill — 一键生成当前产品情况的摘要：哪些 API 已实现、项目模块的各自的完成度、LLM prompt 当前策略是什么。这样可以快速知道知道项目的进度。
+test-flow skill — 端到端跑一遍完整用户流程：比如这个当前自动优化简历项目，上传一份测试简历 → 解析 → 优化 → 导出 PDF，把结果文件直接丢给他看，快速测试项目效果。 
+
+- 如果是技术开发同事
+他的诉求是快速上手项目。
+我会给他配skills：
+add-model-field skill — 比如这个项目最频繁的改动就是"给简历加个字段"（比如加项目经历）。这个 skill 帮他一次性同步改完 Java Model → LLM prompt → Vue 表单 
+backend-reviewer subagent — 专门审查 Spring Boot 层的改动：异常处理有没有漏、LLM 调用有没有超时兜底等
+pre-commit hook 跑 mvn compile —防止他提交了编译都跑不通的代码，
+task- history skill — 每次CC开发一个task都进行记录，方便后续查看和其他agent配合使用

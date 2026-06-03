@@ -127,6 +127,8 @@ public class DocumentModifierService {
             if (templateRun != null) {
                 copyRunFormatting(templateRun, run);
             }
+            // Ensure CJK font is set so Chinese renders correctly in Word
+            ensureCJKFont(run);
         }
 
         log.info("Replaced {} skill paragraphs with {} new ones", skillParagraphIndices.size(), newSkills.size());
@@ -149,11 +151,15 @@ public class DocumentModifierService {
                 // Replace text in this paragraph with new skills (joined)
                 if (!para.getRuns().isEmpty()) {
                     XWPFRun firstRun = para.getRuns().get(0);
+                    // Save a reference run for formatting copy (use first run before removal)
+                    XWPFRun refRun = firstRun;
                     // Remove other runs
                     for (int i = para.getRuns().size() - 1; i > 0; i--) {
                         para.removeRun(i);
                     }
-                    firstRun.setText(String.join("，", newSkills), 0);
+                    firstRun.setText(String.join("，", newSkills));
+                    copyRunFormatting(refRun, firstRun);
+                    ensureCJKFont(firstRun);
                 }
             }
         }
@@ -177,6 +183,44 @@ public class DocumentModifierService {
         } catch (Exception ignored) {}
         try {
             target.setUnderline(source.getUnderline());
+        } catch (Exception ignored) {}
+        // Copy East Asian (CJK) font settings to prevent Chinese ??? in exported Word
+        copyRFonts(source, target);
+    }
+
+    /**
+     * Copy full rFonts element (ascii, hAnsi, eastAsia, cs) from source to target run.
+     * Without this, new Chinese text uses Latin-only fonts and renders as ??? in Word.
+     */
+    private void copyRFonts(XWPFRun source, XWPFRun target) {
+        try {
+            if (!source.getCTR().isSetRPr()) return;
+            var srcRPr = source.getCTR().getRPr();
+            if (srcRPr.sizeOfRFontsArray() == 0) return;
+            var srcFonts = srcRPr.getRFontsArray(0);
+
+            var tgtRPr = target.getCTR().isSetRPr() ? target.getCTR().getRPr() : target.getCTR().addNewRPr();
+            var tgtFonts = tgtRPr.sizeOfRFontsArray() > 0 ? tgtRPr.getRFontsArray(0) : tgtRPr.addNewRFonts();
+
+            if (srcFonts.getAscii() != null) tgtFonts.setAscii(srcFonts.getAscii());
+            if (srcFonts.getHAnsi() != null) tgtFonts.setHAnsi(srcFonts.getHAnsi());
+            if (srcFonts.getEastAsia() != null) tgtFonts.setEastAsia(srcFonts.getEastAsia());
+            if (srcFonts.getCs() != null) tgtFonts.setCs(srcFonts.getCs());
+        } catch (Exception ignored) {}
+    }
+
+    /**
+     * Ensure target run has a CJK-compatible font. If no East Asian font is set
+     * after copying from source, fall back to 宋体 (SimSun) which is universally
+     * available and supports Chinese characters.
+     */
+    private void ensureCJKFont(XWPFRun run) {
+        try {
+            var tgtRPr = run.getCTR().isSetRPr() ? run.getCTR().getRPr() : run.getCTR().addNewRPr();
+            var tgtFonts = tgtRPr.sizeOfRFontsArray() > 0 ? tgtRPr.getRFontsArray(0) : tgtRPr.addNewRFonts();
+            if (tgtFonts.getEastAsia() == null || tgtFonts.getEastAsia().isEmpty()) {
+                tgtFonts.setEastAsia("宋体");
+            }
         } catch (Exception ignored) {}
     }
 }

@@ -4,15 +4,62 @@
       "Skill(update-config)",
       "Bash(git add *)",
       "Bash(git commit *)",
-      "Bash(mvn spring-boot:run)",
       "Bash(git rm *)",
-      "Bash(curl -s -X POST http://localhost:8080/api/resume/parse -F \"file=@/Users/mata/Up/work/Finture_Exam/王士博简历.doc\")",
+      "Bash(git -C *)",
+      "Bash(mvn *)",
+      "Bash(nohup *)",
+      "Bash(cd /Users/mata/Up/Projects/Finture_exam_autoCV/backend && nohup mvn spring-boot:run -Dspring-boot.run.profiles=local *)",
+      "Bash(cd /Users/mata/Up/Projects/Finture_exam_autoCV/frontend && nohup npm run dev *)",
+      "Bash(lsof -ti:*)",
+      "Bash(xargs kill*)",
+      "Bash(python3 -c *)",
       "Bash(python3 -m json.tool)",
-      "Bash(mvn compile *)",
-      "Bash(git -C /Users/mata/Up/Projects/Finture_exam_autoCV add backend/src/main/java/com/finture/resume/service/OptimizerService.java)",
-      "Bash(git -C /Users/mata/Up/Projects/Finture_exam_autoCV commit -m \"feat: enrich skills optimization — generate senior-level descriptions instead of bare keywords\")",
-      "Bash(git -C /Users/mata/Up/Projects/Finture_exam_autoCV add -A)",
-      "Bash(git -C /Users/mata/Up/Projects/Finture_exam_autoCV commit -m \"fix style issue\")"
+      "Bash(echo *)",
+      "Bash(curl *)",
+      "Read",
+      "Write",
+      "Edit"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "lsof -ti:8080 2>/dev/null | xargs kill -9 2>/dev/null; lsof -ti:5173 2>/dev/null | xargs kill -9 2>/dev/null; echo '{\"systemMessage\": \"🛑 已停止后端(:8080) 和 前端(:5173)\"}'",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd /Users/mata/Up/Projects/Finture_exam_autoCV/backend && nohup mvn spring-boot:run -Dspring-boot.run.profiles=local > /tmp/backend.log 2>&1 & cd /Users/mata/Up/Projects/Finture_exam_autoCV/frontend && nohup npm run dev > /tmp/frontend.log 2>&1 & echo '{\"systemMessage\": \"🚀 后端(:8080) 和 前端(:5173) 重启中...\"}'",
+            "timeout": 15,
+            "async": true,
+            "statusMessage": "正在重启服务..."
+          },
+          {
+            "type": "command",
+            "command": "FILE=$(python3 -c \"import json,sys; print(json.load(sys.stdin)['tool_input']['file_path'])\" 2>/dev/null) && cd /Users/mata/Up/Projects/Finture_exam_autoCV && git add \"$FILE\" 2>/dev/null && git commit -m \"auto: $(basename \"$FILE\")\" 2>/dev/null && echo '{\"systemMessage\": \"✅ 已自动提交: '\"$(basename \"$FILE\")\"'\"}' || true",
+            "timeout": 10,
+            "async": true,
+            "statusMessage": "自动提交中..."
+          },
+          {
+            "type": "command",
+            "command": "FILE=$(python3 -c \"import json,sys; print(json.load(sys.stdin)['tool_input']['file_path'])\" 2>/dev/null) && echo \"- $(date '+%Y-%m-%d %H:%M') — $(basename \"$FILE\")\" >> /Users/mata/Up/Projects/Finture_exam_autoCV/docs/CHANGELOG.md 2>/dev/null || true",
+            "timeout": 5,
+            "async": true
+          }
+        ]
+      }
     ]
   }
 }
