@@ -10,15 +10,13 @@ const dragOver = ref(false)
 async function handleFile(inputFile) {
   error.value = ''
   const validTypes = [
-    'application/pdf',
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     'application/msword'
   ]
   if (!validTypes.includes(inputFile.type) &&
-      !inputFile.name.endsWith('.pdf') &&
       !inputFile.name.endsWith('.docx') &&
       !inputFile.name.endsWith('.doc')) {
-    error.value = '仅支持 PDF 和 Word (.docx/.doc) 文件'
+    error.value = '仅支持 Word (.docx/.doc) 文件'
     return
   }
   loading.value = true
@@ -56,9 +54,9 @@ function onFileChange(e) {
       <div v-if="loading" class="loading-text">解析中...</div>
       <div v-else>
         <p>拖拽简历文件到此处，或点击选择</p>
-        <p class="hint">支持 PDF / Word (.docx, .doc)</p>
+        <p class="hint">仅支持 Word (.docx, .doc) 格式</p>
       </div>
-      <input type="file" accept=".pdf,.doc,.docx" @change="onFileChange" />
+      <input type="file" accept=".doc,.docx" @change="onFileChange" />
     </div>
     <p v-if="error" class="error">{{ error }}</p>
   </div>
