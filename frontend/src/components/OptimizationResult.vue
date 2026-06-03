@@ -29,7 +29,7 @@ async function handleExport() {
 
 <template>
   <div class="result" v-if="suggestions || optimizedResume">
-    <h2>Step 3: 优化结果</h2>
+    <h2>Step 3: 优化结果 — 专业技能提升</h2>
 
     <!-- 优化建议 -->
     <section v-if="suggestions && suggestions.length > 0">
@@ -41,20 +41,19 @@ async function handleExport() {
         </div>
         <div class="s-body">
           <div class="s-original">
-            <span class="label">原文</span>
+            <span class="label">优化前</span>
             <p>{{ s.original }}</p>
           </div>
           <div class="s-arrow">→</div>
           <div class="s-new">
-            <span class="label">建议</span>
+            <span class="label">优化后</span>
             <p>{{ s.suggestion }}</p>
           </div>
         </div>
       </div>
     </section>
-    <section v-else>
-      <p class="no-suggestions">LLM 未返回逐条建议，请查看优化后简历。</p>
-    </section>
+
+    <p class="note">基础信息、工作经历、教育背景均保持原样不变</p>
 
     <button
       class="btn-export"
@@ -71,6 +70,7 @@ async function handleExport() {
 h2 { margin-bottom: 16px; font-size: 18px; }
 h3 { font-size: 15px; margin-bottom: 12px; color: #555; }
 section { background: #fff; border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+.note { color: #888; font-size: 13px; margin: 16px 0; text-align: center; }
 .suggestion-card { border: 1px solid #eee; border-radius: 8px; padding: 12px; margin-bottom: 10px; }
 .s-header { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
 .badge { background: #e8f0fe; color: #4a90d9; padding: 2px 8px; border-radius: 4px; font-size: 12px; }
@@ -81,7 +81,6 @@ section { background: #fff; border-radius: 8px; padding: 16px; margin-bottom: 16
 .label { font-size: 11px; color: #999; text-transform: uppercase; }
 .s-original p { color: #c62828; font-size: 14px; }
 .s-new p { color: #2e7d32; font-size: 14px; }
-.no-suggestions { color: #888; font-size: 14px; }
 .btn-export { width: 100%; padding: 14px; background: #2e7d32; color: #fff; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; }
 .btn-export:hover { background: #1b5e20; }
 .btn-export:disabled { opacity: 0.6; cursor: not-allowed; }
