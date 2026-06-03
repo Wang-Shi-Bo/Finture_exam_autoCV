@@ -102,9 +102,9 @@ public class OptimizerService {
 
     private String getSystemPrompt(String language) {
         if ("zh".equals(language)) {
-            return "你是一个高级技术面试官和简历顾问。你的任务是仅优化简历中的\\\"专业技能(skills)\\\"部分，使其达到高级/资深开发工程师水平。基础信息、工作经历、教育背景必须原样保留，一个字都不许改。";
+            return "你是一个资深技术招聘专家。你的任务是仅优化简历中的\"专业技能(skills)\"部分，针对每个技能关键词写出高级/资深开发工程师水平的专业描述。基础信息、工作经历、教育背景必须原样保留，一个字都不许改。";
         }
-        return "You are a senior technical interviewer and resume consultant. Your task is to ONLY optimize the 'skills' section to senior/lead developer level. Personal info, work experience, and education MUST be preserved verbatim — do not modify a single character.";
+        return "You are a senior technical hiring expert. Your task is to ONLY optimize the 'skills' section — for each skill keyword, write a professional description at senior/lead developer level. Personal info, work experience, and education MUST be preserved verbatim — do not modify a single character.";
     }
 
     private String buildPrompt(String resumeJson, String language) {
@@ -113,16 +113,20 @@ public class OptimizerService {
             请仅优化以下%s简历中的"专业技能(skills)"部分。
 
             优化要求：
-            1. 补充该技术栈资深工程师通常具备但当前遗漏的关键技能
-            2. 将笼统的技能描述细化为具体的技术栈（如"数据库" → "MySQL、PostgreSQL、MongoDB"）
-            3. 按技能重要性排序，最核心的技能放在前面
-            4. 技能数量控制在 8-15 个，宁缺毋滥
+            1. 根据简历中出现的技术关键词，将每个技能展开为一句高级开发的描述，不能只写技术名词
+            2. 每条描述应体现：掌握程度（精通/深入理解/熟练掌握）+ 具体技术点 + 应用场景
+            3. 例如：
+               - "Java" → "精通Java集合框架、并发编程及JVM内存模型与性能调优"
+               - "MySQL" → "深入理解MySQL索引原理、锁机制、SQL优化及分库分表方案"
+               - "Redis" → "熟练掌握Redis数据结构、持久化策略、集群方案及缓存常见问题"
+            4. 技能数量控制在 8-15 个，最重要的放前面
+            5. 不要列出简历中未涉及的技术
 
             ⚠️ 重要约束：
             - personalInfo（基础信息）必须原样返回，不得修改任何字段
             - workExperience（工作经历）必须原样返回，不得修改任何字段
             - education（教育背景）必须原样返回，不得修改任何字段
-            - 只允许修改 skills 数组
+            - 只允许修改 skills 数组，skills 中每个元素是完整的描述句
 
             当前简历JSON：
             %s
@@ -132,16 +136,16 @@ public class OptimizerService {
               "suggestions": [
                 {
                   "section": "skills",
-                  "original": "原始技能列表（逗号分隔）",
-                  "suggestion": "优化后的技能列表（逗号分隔）",
-                  "reason": "优化原因"
+                  "original": "原始技能列表",
+                  "suggestion": "优化后技能列表（每条是完整描述）",
+                  "reason": "优化思路"
                 }
               ],
               "optimizedResume": {
                 "personalInfo": {"name": "原样", "email": "原样", "phone": "原样"},
                 "workExperience": [{"company": "原样", "title": "原样", "startDate": "原样", "endDate": "原样", "highlights": ["原样"]}],
                 "education": [{"school": "原样", "degree": "原样", "major": "原样", "graduationYear": "原样"}],
-                "skills": ["优化后的技能1", "优化后的技能2"],
+                "skills": ["精通Java集合框架、并发编程及JVM内存模型与调优", "深入理解MySQL索引原理与SQL优化"],
                 "language": "zh"
               }
             }
