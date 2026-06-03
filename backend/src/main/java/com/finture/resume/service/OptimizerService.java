@@ -69,7 +69,14 @@ public class OptimizerService {
             Map message = (Map) choices.get(0).get("message");
             String content = (String) message.get("content");
 
-            return parseOptimizeResponse(content);
+            OptimizeResponse result = parseOptimizeResponse(content);
+            // Defensive: preserve original non-skills fields in case LLM modified them
+            if (result.getOptimizedResume() != null) {
+                result.getOptimizedResume().setPersonalInfo(resume.getPersonalInfo());
+                result.getOptimizedResume().setWorkExperience(resume.getWorkExperience());
+                result.getOptimizedResume().setEducation(resume.getEducation());
+            }
+            return result;
         } catch (Exception e) {
             // 重试一次
             try {
@@ -80,7 +87,13 @@ public class OptimizerService {
                 List<Map> retryChoices = (List<Map>) retryBody.get("choices");
                 Map retryMessage = (Map) retryChoices.get(0).get("message");
                 String retryContent = (String) retryMessage.get("content");
-                return parseOptimizeResponse(retryContent);
+                OptimizeResponse retryResult = parseOptimizeResponse(retryContent);
+                if (retryResult.getOptimizedResume() != null) {
+                    retryResult.getOptimizedResume().setPersonalInfo(resume.getPersonalInfo());
+                    retryResult.getOptimizedResume().setWorkExperience(resume.getWorkExperience());
+                    retryResult.getOptimizedResume().setEducation(resume.getEducation());
+                }
+                return retryResult;
             } catch (Exception retryError) {
                 throw new RuntimeException("LLM 服务暂时不可用，请稍后重试");
             }
@@ -89,39 +102,46 @@ public class OptimizerService {
 
     private String getSystemPrompt(String language) {
         if ("zh".equals(language)) {
-            return "你是一个专业的简历优化顾问。根据用户提供的简历JSON，优化所有字段（个人总结、工作经历、项目经历、技能等），从内容措辞、职位匹配度、ATS关键词三个维度进行优化。必须返回完整JSON，保留所有字段不丢失。";
+            return "你是一个高级技术面试官和简历顾问。你的任务是仅优化简历中的"专业技能(skills)"部分，使其达到高级/资深开发工程师水平。基础信息、工作经历、教育背景必须原样保留，一个字都不许改。";
         }
-        return "You are a professional resume optimization consultant. Optimize the given resume JSON from three dimensions: wording, job matching, and ATS keywords. Return strict JSON format.";
+        return "You are a senior technical interviewer and resume consultant. Your task is to ONLY optimize the 'skills' section to senior/lead developer level. Personal info, work experience, and education MUST be preserved verbatim — do not modify a single character.";
     }
 
     private String buildPrompt(String resumeJson, String language) {
         String lang = "zh".equals(language) ? "中文" : "English";
         return String.format("""
-            请优化以下%s简历。从三个维度进行优化：
-            1. 内容措辞：使用更有力的动词，突出量化成果
-            2. 职位匹配：增强通用竞争力
-            3. ATS关键词：补充行业标准关键词
+            请仅优化以下%s简历中的"专业技能(skills)"部分。
+
+            优化要求：
+            1. 补充该技术栈资深工程师通常具备但当前遗漏的关键技能
+            2. 将笼统的技能描述细化为具体的技术栈（如"数据库" → "MySQL、PostgreSQL、MongoDB"）
+            3. 按技能重要性排序，最核心的技能放在前面
+            4. 技能数量控制在 8-15 个，宁缺毋滥
+
+            ⚠️ 重要约束：
+            - personalInfo（基础信息）必须原样返回，不得修改任何字段
+            - workExperience（工作经历）必须原样返回，不得修改任何字段
+            - education（教育背景）必须原样返回，不得修改任何字段
+            - 只允许修改 skills 数组
 
             当前简历JSON：
             %s
 
-            请返回如下JSON格式（不要包含任何其他文字，必须包含所有字段）：
+            请返回如下JSON格式（不要包含任何其他文字）：
             {
               "suggestions": [
                 {
-                  "section": "字段名",
-                  "original": "原始文本",
-                  "suggestion": "优化后文本",
+                  "section": "skills",
+                  "original": "原始技能列表（逗号分隔）",
+                  "suggestion": "优化后的技能列表（逗号分隔）",
                   "reason": "优化原因"
                 }
               ],
               "optimizedResume": {
-                "personalInfo": {"name": "...", "email": "...", "phone": "..."},
-                "summary": "优化后的个人总结",
-                "workExperience": [{"company": "...", "title": "...", "startDate": "...", "endDate": "...", "highlights": ["优化后的亮点"]}],
-                "projects": [{"name": "...", "description": "...", "techStack": "...", "highlights": ["优化后的亮点"]}],
-                "education": [{"school": "...", "degree": "...", "major": "...", "graduationYear": "..."}],
-                "skills": ["..."],
+                "personalInfo": {"name": "原样", "email": "原样", "phone": "原样"},
+                "workExperience": [{"company": "原样", "title": "原样", "startDate": "原样", "endDate": "原样", "highlights": ["原样"]}],
+                "education": [{"school": "原样", "degree": "原样", "major": "原样", "graduationYear": "原样"}],
+                "skills": ["优化后的技能1", "优化后的技能2"],
                 "language": "zh"
               }
             }
@@ -137,9 +157,7 @@ public class OptimizerService {
 
             提取要求：
             - personalInfo: 姓名(name)、邮箱(email)、电话(phone)
-            - summary: 一句话个人总结（从原文提炼，不要照搬全文）
             - workExperience: 工作经历数组，每条包含公司(company)、职位(title)、开始日期(startDate)、结束日期(endDate)、亮点(highlights数组)
-            - projects: 项目经历数组，每条包含项目名称(name)、项目描述(description)、技术栈(techStack)、亮点(highlights数组)
             - education: 教育经历数组，每条包含学校(school)、学位(degree)、专业(major)、毕业年份(graduationYear)
             - skills: 技能数组
             - language: "zh" 或 "en"
@@ -147,9 +165,7 @@ public class OptimizerService {
             JSON格式示例：
             {
               "personalInfo": {"name": "姓名", "email": "xxx@xxx.com", "phone": "138xxxx"},
-              "summary": "简短的个人总结",
               "workExperience": [{"company": "公司名", "title": "职位", "startDate": "2020-01", "endDate": "2022-06", "highlights": ["亮点1", "亮点2"]}],
-              "projects": [{"name": "项目名", "description": "描述", "techStack": "Spring Boot, MySQL", "highlights": ["亮点1", "亮点2"]}],
               "education": [{"school": "大学名", "degree": "本科", "major": "专业名", "graduationYear": "2018"}],
               "skills": ["Java", "Spring Boot"],
               "language": "zh"
@@ -209,7 +225,7 @@ public class OptimizerService {
             OptimizeResponse fallback = new OptimizeResponse();
             fallback.setSuggestions(List.of());
             Resume fallbackResume = new Resume();
-            fallbackResume.setSummary(content);
+            fallbackResume.setSkills(List.of("解析失败，请重试"));
             fallback.setOptimizedResume(fallbackResume);
             return fallback;
         }
