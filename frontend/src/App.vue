@@ -12,8 +12,10 @@ const optimizedResume = ref(null)
 const optimizing = ref(false)
 const optimizeError = ref('')
 
+const fileId = ref(null)
 function onParsed(data) {
-  resume.value = data
+  resume.value = data.resume
+  fileId.value = data.fileId
   step.value = 2
 }
 
@@ -76,6 +78,7 @@ function reset() {
 
     <OptimizationResult
       v-if="step === 3"
+      :fileId="fileId"
       :suggestions="suggestions"
       :optimizedResume="optimizedResume"
       @export="onExport"

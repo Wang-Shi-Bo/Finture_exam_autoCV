@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -18,11 +19,14 @@ class ParserServiceTest {
 
     private ParserService parserService;
     private OptimizerService mockOptimizer;
+    private FileStorageService mockStorage;
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws Exception {
         mockOptimizer = mock(OptimizerService.class);
-        parserService = new ParserService(mockOptimizer);
+        mockStorage = mock(FileStorageService.class);
+        when(mockStorage.save(any(), anyString())).thenReturn("test-uuid");
+        parserService = new ParserService(mockOptimizer, mockStorage);
     }
 
     @Test
@@ -35,7 +39,6 @@ class ParserServiceTest {
 
     @Test
     void parseDocx_shouldReturnResumeFromLLM() throws Exception {
-        // Mock LLM response
         Resume mockResume = new Resume();
         PersonalInfo info = new PersonalInfo();
         info.setName("Test User");
@@ -55,8 +58,10 @@ class ParserServiceTest {
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
             docxBytes
         );
-        var resume = parserService.parse(file);
-        assertNotNull(resume);
+        var result = parserService.parse(file);
+        assertNotNull(result);
+        assertNotNull(result.getFileId());
+        Resume resume = result.getResume();
         assertEquals("Test User", resume.getPersonalInfo().getName());
         assertEquals("test@example.com", resume.getPersonalInfo().getEmail());
         assertEquals("13812345678", resume.getPersonalInfo().getPhone());
@@ -64,7 +69,6 @@ class ParserServiceTest {
 
     @Test
     void parseDocx_llmFailure_shouldFallback() throws Exception {
-        // Mock LLM failure
         when(mockOptimizer.parseResumeFromText(anyString()))
             .thenThrow(new RuntimeException("API error"));
 
@@ -74,8 +78,9 @@ class ParserServiceTest {
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
             docxBytes
         );
-        var resume = parserService.parse(file);
-        assertNotNull(resume);
+        var result = parserService.parse(file);
+        assertNotNull(result);
+        Resume resume = result.getResume();
         // Fallback should still extract email/phone via regex
         assertEquals("test@example.com", resume.getPersonalInfo().getEmail());
         assertEquals("13812345678", resume.getPersonalInfo().getPhone());

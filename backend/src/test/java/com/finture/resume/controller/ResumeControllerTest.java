@@ -1,5 +1,6 @@
 package com.finture.resume.controller;
 
+import com.finture.resume.model.ParseResult;
 import com.finture.resume.model.Resume;
 import com.finture.resume.service.ExportService;
 import com.finture.resume.service.OptimizerService;
@@ -35,7 +36,8 @@ class ResumeControllerTest {
     void parse_shouldReturnResumeJson() throws Exception {
         Resume mockResume = new Resume();
         mockResume.setLanguage("zh");
-        when(parserService.parse(any())).thenReturn(mockResume);
+        ParseResult mockResult = new ParseResult(mockResume, "test-uuid");
+        when(parserService.parse(any())).thenReturn(mockResult);
 
         MockMultipartFile file = new MockMultipartFile(
             "file", "resume.docx",
@@ -45,13 +47,14 @@ class ResumeControllerTest {
 
         mockMvc.perform(multipart("/api/resume/parse").file(file))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.language").value("zh"));
+            .andExpect(jsonPath("$.resume.language").value("zh"))
+            .andExpect(jsonPath("$.fileId").value("test-uuid"));
     }
 
     @Test
     void parse_wrongFormat_shouldReturn400() throws Exception {
         when(parserService.parse(any()))
-            .thenThrow(new IllegalArgumentException("仅支持 PDF 和 Word 格式"));
+            .thenThrow(new IllegalArgumentException("仅支持 Word (.doc/.docx) 格式"));
 
         MockMultipartFile file = new MockMultipartFile(
             "file", "resume.png", "image/png", "test".getBytes()

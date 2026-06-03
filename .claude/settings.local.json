@@ -6,20 +6,13 @@
       "Bash(git commit *)",
       "Bash(mvn spring-boot:run)",
       "Bash(git rm *)",
-      "Bash(mkdir *)",
-      "Bash(python3 *)"
-    ]
-  },
-  "hooks": {
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 -c \"\nimport json, sys, os\nfrom datetime import datetime\n\ndata = json.load(sys.stdin)\nsid = data.get('session_id', 'unknown')\nts = datetime.now().strftime('%Y-%m-%d-%H%M%S')\n\nos.makedirs('docs/superpowers/logs', exist_ok=True)\nfname = f'docs/superpowers/logs/{ts}-session-log.md'\n\nwith open(fname, 'w') as f:\n    f.write(f'# Session Log: {ts}\\n\\n')\n    f.write(f'- **Session ID**: {sid}\\n')\n    f.write(f'- **Time**: {datetime.now().isoformat()}\\n\\n')\n    f.write('## Changes Summary\\n\\n')\n\nprint(json.dumps({'systemMessage': f'Session log: {fname}'}))\n\""
-          }
-        ]
-      }
+      "Bash(curl -s -X POST http://localhost:8080/api/resume/parse -F \"file=@/Users/mata/Up/work/Finture_Exam/王士博简历.doc\")",
+      "Bash(python3 -m json.tool)",
+      "Bash(mvn compile *)",
+      "Bash(git -C /Users/mata/Up/Projects/Finture_exam_autoCV add backend/src/main/java/com/finture/resume/service/OptimizerService.java)",
+      "Bash(git -C /Users/mata/Up/Projects/Finture_exam_autoCV commit -m \"feat: enrich skills optimization — generate senior-level descriptions instead of bare keywords\")",
+      "Bash(git -C /Users/mata/Up/Projects/Finture_exam_autoCV add -A)",
+      "Bash(git -C /Users/mata/Up/Projects/Finture_exam_autoCV commit -m \"fix style issue\")"
     ]
   }
 }

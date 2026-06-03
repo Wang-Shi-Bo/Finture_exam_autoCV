@@ -7,6 +7,7 @@ import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.regex.Matcher;
@@ -16,51 +17,60 @@ import java.util.regex.Pattern;
 public class ParserService {
 
     private final OptimizerService optimizerService;
+    private final FileStorageService fileStorageService;
 
-    public ParserService(OptimizerService optimizerService) {
+    public ParserService(OptimizerService optimizerService,
+                         FileStorageService fileStorageService) {
         this.optimizerService = optimizerService;
+        this.fileStorageService = fileStorageService;
     }
 
-    public Resume parse(MultipartFile file) throws IOException {
+    public ParseResult parse(MultipartFile file) throws IOException {
         String filename = file.getOriginalFilename();
         if (filename == null) {
             throw new IllegalArgumentException("文件名不能为空");
         }
 
+        // Save original file bytes immediately (before consuming the stream)
+        byte[] fileBytes = file.getBytes();
+        String fileId = fileStorageService.save(fileBytes, filename);
+
         String text;
         if (filename.endsWith(".docx")) {
-            text = parseDocx(file);
+            text = parseDocx(fileBytes);
         } else if (filename.endsWith(".doc")) {
-            text = parseDoc(file);
+            text = parseDoc(fileBytes);
         } else {
             throw new IllegalArgumentException("仅支持 Word (.doc/.docx) 格式，请上传 Word 文件");
         }
 
         // Use LLM for structured parsing
+        Resume resume;
         try {
-            Resume resume = optimizerService.parseResumeFromText(text);
+            resume = optimizerService.parseResumeFromText(text);
             // Ensure non-null collections
             if (resume.getWorkExperience() == null) resume.setWorkExperience(new ArrayList<>());
             if (resume.getEducation() == null) resume.setEducation(new ArrayList<>());
             if (resume.getSkills() == null) resume.setSkills(new ArrayList<>());
             if (resume.getPersonalInfo() == null) resume.setPersonalInfo(new PersonalInfo());
-            return resume;
         } catch (Exception e) {
             // Fallback: basic regex extraction
-            return fallbackParse(text);
+            resume = fallbackParse(text);
         }
+
+        return new ParseResult(resume, fileId);
     }
 
-    private String parseDocx(MultipartFile file) throws IOException {
-        try (XWPFDocument document = new XWPFDocument(file.getInputStream())) {
+    private String parseDocx(byte[] fileBytes) throws IOException {
+        try (XWPFDocument document = new XWPFDocument(new ByteArrayInputStream(fileBytes))) {
             StringBuilder sb = new StringBuilder();
             document.getParagraphs().forEach(p -> sb.append(p.getText()).append("\n"));
             return sb.toString();
         }
     }
 
-    private String parseDoc(MultipartFile file) throws IOException {
-        try (HWPFDocument document = new HWPFDocument(file.getInputStream());
+    private String parseDoc(byte[] fileBytes) throws IOException {
+        try (HWPFDocument document = new HWPFDocument(new ByteArrayInputStream(fileBytes));
              WordExtractor extractor = new WordExtractor(document)) {
             return extractor.getText();
         }

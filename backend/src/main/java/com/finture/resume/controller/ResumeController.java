@@ -1,7 +1,9 @@
 package com.finture.resume.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.finture.resume.model.ExportRequest;
 import com.finture.resume.model.OptimizeResponse;
+import com.finture.resume.model.ParseResult;
 import com.finture.resume.model.Resume;
 import com.finture.resume.service.ExportService;
 import com.finture.resume.service.OptimizerService;
@@ -33,8 +35,8 @@ public class ResumeController {
     @PostMapping("/parse")
     public ResponseEntity<?> parse(@RequestParam("file") MultipartFile file) {
         try {
-            Resume resume = parserService.parse(file);
-            return ResponseEntity.ok(resume);
+            ParseResult result = parserService.parse(file);
+            return ResponseEntity.ok(result);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest()
                 .body(Map.of("error", e.getMessage()));
@@ -59,18 +61,34 @@ public class ResumeController {
     }
 
     @PostMapping("/export")
-    public ResponseEntity<?> export(@RequestBody Resume resume) {
+    public ResponseEntity<?> export(@RequestBody ExportRequest request) {
         try {
-            byte[] pdfBytes = exportService.exportToPdf(resume);
+            // Primary: modify original file and return .docx (preserves formatting)
+            byte[] docxBytes = exportService.exportToDocx(request);
             HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_PDF);
+            headers.setContentType(MediaType.parseMediaType(
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document"));
             headers.setContentDisposition(
-                ContentDisposition.attachment().filename("optimized-resume.pdf").build()
+                ContentDisposition.attachment().filename("optimized-resume.docx").build()
             );
-            return new ResponseEntity<>(pdfBytes, headers, HttpStatus.OK);
-        } catch (IOException | DocumentException e) {
+            return new ResponseEntity<>(docxBytes, headers, HttpStatus.OK);
+        } catch (IllegalArgumentException e) {
+            // No fileId — fallback to PDF from JSON
+            try {
+                byte[] pdfBytes = exportService.exportToPdf(request.getResume());
+                HttpHeaders headers = new HttpHeaders();
+                headers.setContentType(MediaType.APPLICATION_PDF);
+                headers.setContentDisposition(
+                    ContentDisposition.attachment().filename("optimized-resume.pdf").build()
+                );
+                return new ResponseEntity<>(pdfBytes, headers, HttpStatus.OK);
+            } catch (IOException | DocumentException ex) {
+                return ResponseEntity.internalServerError()
+                    .body(Map.of("error", "导出失败: " + ex.getMessage()));
+            }
+        } catch (IOException e) {
             return ResponseEntity.internalServerError()
-                .body(Map.of("error", "PDF 生成失败: " + e.getMessage()));
+                .body(Map.of("error", "导出失败: " + e.getMessage()));
         }
     }
 }

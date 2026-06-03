@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 
 const props = defineProps({
+  fileId: String,
   suggestions: Array,
   optimizedResume: Object
 })
@@ -14,11 +15,15 @@ async function handleExport() {
   exporting.value = true
   try {
     const { exportPdf } = await import('../api/resume.js')
-    const res = await exportPdf(props.optimizedResume)
+    const res = await exportPdf({
+      fileId: props.fileId,
+      resume: props.optimizedResume,
+      suggestions: props.suggestions
+    })
     const url = window.URL.createObjectURL(new Blob([res.data]))
     const a = document.createElement('a')
     a.href = url
-    a.download = 'optimized-resume.pdf'
+    a.download = 'optimized-resume.docx'
     a.click()
     window.URL.revokeObjectURL(url)
   } finally {
@@ -68,7 +73,7 @@ async function handleExport() {
       :disabled="exporting"
       @click="handleExport"
     >
-      {{ exporting ? '生成中...' : '导出优化后 PDF' }}
+      {{ exporting ? '生成中...' : '导出优化后 Word' }}
     </button>
   </div>
 </template>
