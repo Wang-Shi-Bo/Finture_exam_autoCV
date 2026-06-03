@@ -1,7 +1,6 @@
 package com.finture.resume.service;
 
 import com.finture.resume.model.Education;
-import com.finture.resume.model.Project;
 import com.finture.resume.model.Resume;
 import com.finture.resume.model.WorkExperience;
 import com.lowagie.text.*;
@@ -47,13 +46,6 @@ public class ExportService {
             document.add(new Paragraph(" "));
         }
 
-        // Summary
-        if (resume.getSummary() != null && !resume.getSummary().isEmpty()) {
-            document.add(new Paragraph("个人总结", sectionFont));
-            document.add(new Paragraph(resume.getSummary(), normalFont));
-            document.add(new Paragraph(" "));
-        }
-
         // 工作经历
         if (resume.getWorkExperience() != null && !resume.getWorkExperience().isEmpty()) {
             document.add(new Paragraph("工作经历", sectionFont));
@@ -63,27 +55,6 @@ public class ExportService {
                     " (" + we.getStartDate() + " - " + we.getEndDate() + ")", normalFont));
                 if (we.getHighlights() != null) {
                     for (String h : we.getHighlights()) {
-                        document.add(new Paragraph("  • " + h, normalFont));
-                    }
-                }
-            }
-            document.add(new Paragraph(" "));
-        }
-
-        // 项目经历
-        if (resume.getProjects() != null && !resume.getProjects().isEmpty()) {
-            document.add(new Paragraph("项目经历", sectionFont));
-            for (Project p : resume.getProjects()) {
-                String header = p.getName() != null ? p.getName() : "";
-                if (p.getTechStack() != null && !p.getTechStack().isEmpty()) {
-                    header += "  |  技术栈: " + p.getTechStack();
-                }
-                document.add(new Paragraph(header, normalFont));
-                if (p.getDescription() != null && !p.getDescription().isEmpty()) {
-                    document.add(new Paragraph("  描述: " + p.getDescription(), normalFont));
-                }
-                if (p.getHighlights() != null) {
-                    for (String h : p.getHighlights()) {
                         document.add(new Paragraph("  • " + h, normalFont));
                     }
                 }
@@ -104,7 +75,7 @@ public class ExportService {
 
         // 技能
         if (resume.getSkills() != null && !resume.getSkills().isEmpty()) {
-            document.add(new Paragraph("技能", sectionFont));
+            document.add(new Paragraph("专业技能", sectionFont));
             document.add(new Paragraph(String.join(", ", resume.getSkills()), normalFont));
         }
 
