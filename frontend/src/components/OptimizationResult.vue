@@ -31,6 +31,14 @@ async function handleExport() {
   <div class="result" v-if="suggestions || optimizedResume">
     <h2>Step 3: 优化结果 — 专业技能提升</h2>
 
+    <!-- 技能标签展示 -->
+    <section v-if="optimizedResume?.skills?.length">
+      <h3>优化后专业技能</h3>
+      <div class="skill-tags">
+        <span class="skill-tag" v-for="(skill, i) in optimizedResume.skills" :key="i">{{ skill }}</span>
+      </div>
+    </section>
+
     <!-- 优化建议 -->
     <section v-if="suggestions && suggestions.length > 0">
       <h3>优化建议 ({{ suggestions.length }} 条)</h3>
@@ -81,6 +89,15 @@ section { background: #fff; border-radius: 8px; padding: 16px; margin-bottom: 16
 .label { font-size: 11px; color: #999; text-transform: uppercase; }
 .s-original p { color: #c62828; font-size: 14px; }
 .s-new p { color: #2e7d32; font-size: 14px; }
+.skill-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+.skill-tag {
+  background: linear-gradient(135deg, #e8f0fe, #d4e4fc);
+  color: #1a56b8;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+}
 .btn-export { width: 100%; padding: 14px; background: #2e7d32; color: #fff; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; }
 .btn-export:hover { background: #1b5e20; }
 .btn-export:disabled { opacity: 0.6; cursor: not-allowed; }

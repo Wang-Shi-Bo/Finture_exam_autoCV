@@ -69,11 +69,12 @@ function emitUpdate() {
     <!-- 技能 -->
     <section>
       <h3>专业技能</h3>
-      <input
-        :value="resume.skills?.join(', ')"
-        @input="resume.skills = $event.target.value.split(',').map(s => s.trim()); emitUpdate()"
-        placeholder="技能（逗号分隔）"
-      />
+      <textarea
+        :value="resume.skills?.join('\n')"
+        @input="resume.skills = $event.target.value.split('\n').map(s => s.trim()).filter(s => s); emitUpdate()"
+        placeholder="技能（每行一个）"
+        rows="6"
+      ></textarea>
     </section>
 
     <button class="btn-primary" @click="$emit('optimize', resume)">

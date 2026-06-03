@@ -76,7 +76,9 @@ public class ExportService {
         // 技能
         if (resume.getSkills() != null && !resume.getSkills().isEmpty()) {
             document.add(new Paragraph("专业技能", sectionFont));
-            document.add(new Paragraph(String.join(", ", resume.getSkills()), normalFont));
+            for (String skill : resume.getSkills()) {
+                document.add(new Paragraph("  • " + skill, normalFont));
+            }
         }
 
         document.close();
