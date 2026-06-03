@@ -4,7 +4,6 @@ public class PersonalInfo {
     private String name;
     private String email;
     private String phone;
-    private String location;
 
     public PersonalInfo() {}
 
@@ -14,6 +13,4 @@ public class PersonalInfo {
     public void setEmail(String email) { this.email = email; }
     public String getPhone() { return phone; }
     public void setPhone(String phone) { this.phone = phone; }
-    public String getLocation() { return location; }
-    public void setLocation(String location) { this.location = location; }
 }
