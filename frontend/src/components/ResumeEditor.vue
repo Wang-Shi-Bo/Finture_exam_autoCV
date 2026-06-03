@@ -21,7 +21,7 @@ function emitUpdate() {
 
     <!-- 个人信息 -->
     <section>
-      <h3>个人信息</h3>
+      <h3>基础信息</h3>
       <div class="field" v-if="resume.personalInfo">
         <label>姓名</label>
         <input v-model="resume.personalInfo.name" @input="emitUpdate" />
@@ -30,16 +30,6 @@ function emitUpdate() {
         <label>电话</label>
         <input v-model="resume.personalInfo.phone" @input="emitUpdate" />
       </div>
-    </section>
-
-    <!-- 个人总结 -->
-    <section>
-      <h3>个人总结</h3>
-      <textarea
-        v-model="resume.summary"
-        @input="emitUpdate"
-        rows="4"
-      ></textarea>
     </section>
 
     <!-- 工作经历 -->
@@ -62,30 +52,6 @@ function emitUpdate() {
       </button>
     </section>
 
-    <!-- 项目经历 -->
-    <section>
-      <h3>项目经历</h3>
-      <div v-for="(proj, i) in resume.projects" :key="i" class="card">
-        <input v-model="proj.name" placeholder="项目名称" @input="emitUpdate" />
-        <input v-model="proj.techStack" placeholder="技术栈 (如: Spring Boot, MySQL, Redis)" @input="emitUpdate" />
-        <textarea
-          v-model="proj.description"
-          @input="emitUpdate"
-          placeholder="项目描述"
-          rows="2"
-        ></textarea>
-        <textarea
-          :value="proj.highlights?.join('\n')"
-          @input="proj.highlights = $event.target.value.split('\n'); emitUpdate()"
-          placeholder="项目亮点（每行一个）"
-          rows="3"
-        ></textarea>
-      </div>
-      <button class="btn-sm" @click="(resume.projects || (resume.projects = [])).push({name:'',techStack:'',description:'',highlights:[]}); emitUpdate()">
-        + 添加项目
-      </button>
-    </section>
-
     <!-- 教育 -->
     <section>
       <h3>教育背景</h3>
@@ -102,7 +68,7 @@ function emitUpdate() {
 
     <!-- 技能 -->
     <section>
-      <h3>技能</h3>
+      <h3>专业技能</h3>
       <input
         :value="resume.skills?.join(', ')"
         @input="resume.skills = $event.target.value.split(',').map(s => s.trim()); emitUpdate()"
