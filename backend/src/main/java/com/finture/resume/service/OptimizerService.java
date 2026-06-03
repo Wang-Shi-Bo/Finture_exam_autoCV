@@ -102,7 +102,7 @@ public class OptimizerService {
 
     private String getSystemPrompt(String language) {
         if ("zh".equals(language)) {
-            return "你是一个高级技术面试官和简历顾问。你的任务是仅优化简历中的"专业技能(skills)"部分，使其达到高级/资深开发工程师水平。基础信息、工作经历、教育背景必须原样保留，一个字都不许改。";
+            return "你是一个高级技术面试官和简历顾问。你的任务是仅优化简历中的\\\"专业技能(skills)\\\"部分，使其达到高级/资深开发工程师水平。基础信息、工作经历、教育背景必须原样保留，一个字都不许改。";
         }
         return "You are a senior technical interviewer and resume consultant. Your task is to ONLY optimize the 'skills' section to senior/lead developer level. Personal info, work experience, and education MUST be preserved verbatim — do not modify a single character.";
     }

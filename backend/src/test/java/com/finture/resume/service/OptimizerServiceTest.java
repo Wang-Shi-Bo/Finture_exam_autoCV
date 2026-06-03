@@ -16,7 +16,6 @@ class OptimizerServiceTest {
         Resume resume = new Resume();
         resume.setPersonalInfo(new PersonalInfo());
         resume.getPersonalInfo().setName("Test");
-        resume.setSummary("A test resume");
         resume.setWorkExperience(new ArrayList<>());
         resume.setEducation(new ArrayList<>());
         resume.setSkills(new ArrayList<>());

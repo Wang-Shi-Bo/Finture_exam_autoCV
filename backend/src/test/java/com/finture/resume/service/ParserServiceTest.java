@@ -42,7 +42,6 @@ class ParserServiceTest {
         info.setEmail("test@example.com");
         info.setPhone("13812345678");
         mockResume.setPersonalInfo(info);
-        mockResume.setSummary("A Java developer");
         mockResume.setWorkExperience(new ArrayList<>());
         mockResume.setEducation(new ArrayList<>());
         mockResume.setSkills(List.of("Java", "Spring Boot"));

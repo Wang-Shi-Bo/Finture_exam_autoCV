@@ -38,7 +38,9 @@ class ResumeControllerTest {
         when(parserService.parse(any())).thenReturn(mockResume);
 
         MockMultipartFile file = new MockMultipartFile(
-            "file", "resume.pdf", "application/pdf", "test".getBytes()
+            "file", "resume.docx",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "test".getBytes()
         );
 
         mockMvc.perform(multipart("/api/resume/parse").file(file))
@@ -65,7 +67,9 @@ class ResumeControllerTest {
             .thenThrow(new java.io.IOException("Parse error"));
 
         MockMultipartFile file = new MockMultipartFile(
-            "file", "resume.pdf", "application/pdf", "test".getBytes()
+            "file", "resume.docx",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "test".getBytes()
         );
 
         mockMvc.perform(multipart("/api/resume/parse").file(file))
