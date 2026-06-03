@@ -1,9 +1,6 @@
 package com.finture.resume.service;
 
 import com.finture.resume.model.*;
-import org.apache.pdfbox.Loader;
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -29,12 +26,10 @@ public class ParserService {
         }
 
         String text;
-        if (filename.endsWith(".pdf")) {
-            text = parsePdf(file);
-        } else if (filename.endsWith(".docx") || filename.endsWith(".doc")) {
+        if (filename.endsWith(".docx") || filename.endsWith(".doc")) {
             text = parseDocx(file);
         } else {
-            throw new IllegalArgumentException("仅支持 PDF 和 Word (.docx/.doc) 格式");
+            throw new IllegalArgumentException("仅支持 Word (.doc/.docx) 格式，请上传 Word 文件");
         }
 
         // Use LLM for structured parsing
@@ -43,25 +38,12 @@ public class ParserService {
             // Ensure non-null collections
             if (resume.getWorkExperience() == null) resume.setWorkExperience(new ArrayList<>());
             if (resume.getEducation() == null) resume.setEducation(new ArrayList<>());
-            if (resume.getProjects() == null) resume.setProjects(new ArrayList<>());
             if (resume.getSkills() == null) resume.setSkills(new ArrayList<>());
             if (resume.getPersonalInfo() == null) resume.setPersonalInfo(new PersonalInfo());
             return resume;
         } catch (Exception e) {
             // Fallback: basic regex extraction
             return fallbackParse(text);
-        }
-    }
-
-    private String parsePdf(MultipartFile file) throws IOException {
-        try (PDDocument document = Loader.loadPDF(file.getBytes())) {
-            PDFTextStripper stripper = new PDFTextStripper();
-            stripper.setSortByPosition(true);
-            String text = stripper.getText(document);
-            if (text.trim().isEmpty()) {
-                throw new IOException("PDF 无法解析（可能是扫描件或图片PDF），请尝试手动输入");
-            }
-            return text;
         }
     }
 
@@ -85,10 +67,8 @@ public class ParserService {
         info.setPhone(extractPhone(text));
         resume.setPersonalInfo(info);
 
-        resume.setSummary(text.trim());
         resume.setWorkExperience(new ArrayList<>());
         resume.setEducation(new ArrayList<>());
-        resume.setProjects(new ArrayList<>());
         resume.setSkills(extractSkills(text));
 
         return resume;
