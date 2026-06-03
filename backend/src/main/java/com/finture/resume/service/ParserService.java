@@ -1,6 +1,8 @@
 package com.finture.resume.service;
 
 import com.finture.resume.model.*;
+import org.apache.poi.hwpf.HWPFDocument;
+import org.apache.poi.hwpf.extractor.WordExtractor;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -26,8 +28,10 @@ public class ParserService {
         }
 
         String text;
-        if (filename.endsWith(".docx") || filename.endsWith(".doc")) {
+        if (filename.endsWith(".docx")) {
             text = parseDocx(file);
+        } else if (filename.endsWith(".doc")) {
+            text = parseDoc(file);
         } else {
             throw new IllegalArgumentException("仅支持 Word (.doc/.docx) 格式，请上传 Word 文件");
         }
@@ -52,6 +56,13 @@ public class ParserService {
             StringBuilder sb = new StringBuilder();
             document.getParagraphs().forEach(p -> sb.append(p.getText()).append("\n"));
             return sb.toString();
+        }
+    }
+
+    private String parseDoc(MultipartFile file) throws IOException {
+        try (HWPFDocument document = new HWPFDocument(file.getInputStream());
+             WordExtractor extractor = new WordExtractor(document)) {
+            return extractor.getText();
         }
     }
 
